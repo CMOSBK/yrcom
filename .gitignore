@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# venv
+.venv/
+venv/
+
+# Roboter-Aufnahmen (echte Anlagendaten gehören nicht ins Repo)
+captures/
+robot_capture_*.json
+
+# OS / Editor
+.DS_Store

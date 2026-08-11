@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yrcom"
+version = "0.2.0"
+description = "Yaskawa robot communication — Ethernet Server, HSES and HSES File Control (pure stdlib)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "cmosbk" }]
+keywords = ["yaskawa", "robot", "hses", "ethernet-server", "motoman", "yrc1000"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+yrcom-sim = "yrcom.hses_sim:_main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.urls]
+Homepage = "https://github.com/CMOSBK/yrcom"
+Issues = "https://github.com/CMOSBK/yrcom/issues"
