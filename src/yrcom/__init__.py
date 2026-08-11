@@ -33,7 +33,7 @@ from .robot_connection import (
 )
 from .hses_sim import HsesReplayServer
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "YaskawaClient", "VarType", "EthernetServerClient",

@@ -93,4 +93,4 @@ and a small HSES capture fixture (`tests/fixtures/`).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](https://github.com/CMOSBK/yrcom/blob/main/LICENSE).
