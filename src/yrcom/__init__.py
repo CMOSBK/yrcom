@@ -32,8 +32,15 @@ from .robot_connection import (
     TCP_PORT,
 )
 from .hses_sim import HsesReplayServer
+from .hses_server_codec import (
+    ServerCommand,
+    MalformedRequest,
+    decode_request,
+    encode_response,
+    encode_error,
+)
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 __all__ = [
     "YaskawaClient", "VarType", "EthernetServerClient",
@@ -45,4 +52,5 @@ __all__ = [
     "RobotConnection", "PersistentTcpClient", "HsesWriteBlockedError",
     "TRANSPORT_HSES", "TRANSPORT_ETHERNET", "HSES_PORT", "TCP_PORT",
     "HsesReplayServer",
+    "ServerCommand", "MalformedRequest", "decode_request", "encode_response", "encode_error",
 ]
