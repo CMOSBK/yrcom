@@ -2,6 +2,10 @@
 
 [![CI](https://github.com/CMOSBK/yrcom/actions/workflows/ci.yml/badge.svg)](https://github.com/CMOSBK/yrcom/actions/workflows/ci.yml)
 
+📖 **Documentation: <https://cmosbk.github.io/yrcom/>** — getting started, the
+transport guide and the full API reference (every command, generated from the
+source).
+
 Yaskawa robot communication as a standalone Python library — a single,
 hardware-verified communication core meant to be shared across projects
 instead of being duplicated.

@@ -1,0 +1,73 @@
+site_name: yrcom
+site_description: Yaskawa robot communication — Ethernet Server, HSES and HSES File Control (pure stdlib)
+site_url: https://cmosbk.github.io/yrcom/
+repo_url: https://github.com/CMOSBK/yrcom
+repo_name: CMOSBK/yrcom
+copyright: >
+  Independent community project — not affiliated with or endorsed by Yaskawa.
+
+theme:
+  name: material
+  font: false          # system fonts only — no third-party font requests
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+            filters: ["!^_"]
+            merge_init_into_class: true
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - tables
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Transports: transports.md
+  - Offline testing: offline-testing.md
+  - API reference:
+      - Overview: reference/index.md
+      - RobotConnection: reference/connection.md
+      - HsesClient: reference/hses-client.md
+      - YaskawaClient (Ethernet Server): reference/ethernet-server.md
+      - HsesFileClient: reference/file-client.md
+      - Replay simulator: reference/simulator.md
+      - Status codes: reference/errors.md
+  - Contributing: contributing.md

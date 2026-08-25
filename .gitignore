@@ -8,6 +8,9 @@ dist/
 .coverage
 htmlcov/
 
+# MkDocs build output
+site/
+
 # venv
 .venv/
 venv/
@@ -18,3 +21,6 @@ robot_capture_*.json
 
 # OS / Editor
 .DS_Store
+
+# Local worktrees (isolated workspaces for external plan execution)
+.worktrees/
