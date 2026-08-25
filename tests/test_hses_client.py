@@ -624,6 +624,30 @@ def test_poll_all_status_and_job():
     assert out["job_name"] == "MASTER"
 
 
+def test_poll_all_reads_every_variable_kind_in_one_burst():
+    """D and R used to be reachable only as standalone reads, which put their
+    value a round trip away from the rest of the row."""
+    status_data = struct.pack("<II", 0x40, 0x40)
+    c, _ = _client([
+        _reply(hc._CMD_STATUS, status_data, req_id=1),
+        _reply(hc._CMD_B_VAR, struct.pack("<B", 7), req_id=2),
+        _reply(hc._CMD_I_VAR, struct.pack("<h", -3), req_id=3),
+        _reply(hc._CMD_D_VAR, struct.pack("<i", -70000), req_id=4),
+        _reply(hc._CMD_R_VAR, struct.pack("<f", 1.5), req_id=5),
+    ])
+    out = c.poll_all(
+        include_job=False,
+        b_vars=[{"label": "b", "no": 1}],
+        i_vars=[{"label": "i", "no": 2}],
+        d_vars=[{"label": "d", "no": 3}],
+        r_vars=[{"label": "r", "no": 4}],
+    )
+    assert out["var_b"] == 7
+    assert out["var_i"] == -3
+    assert out["var_d"] == -70000          # signed 32-bit, beyond an I variable
+    assert out["var_r"] == pytest.approx(1.5)
+
+
 def test_poll_all_raises_on_status_error():
     c, _ = _client([_reply(hc._CMD_STATUS, b"", req_id=1, status=0x08)])
     with pytest.raises(HsesError):

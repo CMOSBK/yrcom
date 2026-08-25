@@ -40,7 +40,7 @@ from .hses_server_codec import (
     encode_error,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 __all__ = [
     "YaskawaClient", "VarType", "EthernetServerClient",

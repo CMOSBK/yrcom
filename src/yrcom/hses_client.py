@@ -581,6 +581,8 @@ class HsesClient(_HsesSocket):
         position_group: int = 0,
         b_vars: "list[dict]" = [],
         i_vars: "list[dict]" = [],
+        d_vars: "list[dict]" = [],
+        r_vars: "list[dict]" = [],
         io_signals: "list[dict]" = [],
         read_cio: bool = False,
     ) -> dict:
@@ -590,7 +592,11 @@ class HsesClient(_HsesSocket):
         alarm_slots:    number of alarm history slots (0=skip, max 4)
         include_job:    read executing job info
         position_group: 0=skip, 1-8=pulse, 101-108=cartesian
-        b_vars/i_vars:  list of {"label": str, "no": int}
+        b_vars/i_vars/d_vars/r_vars:
+                        list of {"label": str, "no": int}. Each becomes one
+                        request inside the burst, so its value shares the
+                        instant of the rest of the row rather than arriving a
+                        round trip later.
         io_signals:     list of {"label": str, "logical": int}
 
         Returns flat dict of all decoded fields.
@@ -621,6 +627,14 @@ class HsesClient(_HsesSocket):
         for v in i_vars:
             reqs.append((_CMD_I_VAR, v["no"], 1, _SVC_GET_SINGLE, b""))
             tags.append(f"i_var:{v['label']}")
+
+        for v in d_vars:
+            reqs.append((_CMD_D_VAR, v["no"], 1, _SVC_GET_SINGLE, b""))
+            tags.append(f"d_var:{v['label']}")
+
+        for v in r_vars:
+            reqs.append((_CMD_R_VAR, v["no"], 1, _SVC_GET_SINGLE, b""))
+            tags.append(f"r_var:{v['label']}")
 
         # CIO counter: low byte at logical 72000 (inst 7200), high byte at 72010 (inst 7201)
         if read_cio:
@@ -666,6 +680,12 @@ class HsesClient(_HsesSocket):
             elif tag.startswith("i_var:"):
                 if resp.status == 0 and len(resp.data) >= 2:
                     out[f"var_{tag[6:]}"] = struct.unpack_from("<h", resp.data, 0)[0]
+            elif tag.startswith("d_var:"):
+                if resp.status == 0 and len(resp.data) >= 4:
+                    out[f"var_{tag[6:]}"] = struct.unpack_from("<i", resp.data, 0)[0]
+            elif tag.startswith("r_var:"):
+                if resp.status == 0 and len(resp.data) >= 4:
+                    out[f"var_{tag[6:]}"] = struct.unpack_from("<f", resp.data, 0)[0]
             elif tag == "cio":
                 if resp.status == 0 and len(resp.data) >= 6:
                     # response: 4-byte count + 2 data bytes
