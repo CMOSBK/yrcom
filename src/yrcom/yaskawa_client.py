@@ -104,6 +104,9 @@ class YaskawaClient:
         self.port = port
         self.timeout = timeout
         self.sock: socket.socket | None = None
+        # Bytes already received but not yet consumed. TCP is a byte stream: one recv() may
+        # hold a header and its answer together, or only part of a line.
+        self._rx = b""
 
     # ── Context manager ───────────────────────────────────────────────────────
 
@@ -120,6 +123,7 @@ class YaskawaClient:
         """Open TCP socket to the controller. No-op if already connected."""
         if self.sock is not None:
             return
+        self._rx = b""
         try:
             self.sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
         except Exception:
@@ -131,6 +135,7 @@ class YaskawaClient:
         if self.sock:
             self.sock.close()
             self.sock = None
+        self._rx = b""
 
     # ── Protocol primitives ───────────────────────────────────────────────────
 
@@ -160,39 +165,56 @@ class YaskawaClient:
             raise RuntimeError("Socket not connected")
         header = f"HOSTCTRL_REQUEST {command} {size}\r\n"
         self.sock.sendall(header.encode("ascii"))
-        self._recv_until_ok()
+        reply = self._recv_until_ok()
+        if reply.startswith("NG"):
+            # Request refused: no answer line follows, so waiting for one would only time out.
+            return reply
         if size > 0 and data:
             payload = data if data.endswith("\r") else data + "\r"
             self.sock.sendall(payload.encode("ascii"))
         return self._recv_answer()
 
-    def _recv_until_ok(self) -> str:
-        """Receive until OK or NG appears in the buffer."""
+    def _recv_line(self) -> str | None:
+        """Return the next line from the stream without its terminator, or None
+        if the peer closed the connection with nothing left to read.
+
+        Lines end in ``\r\n`` (handshake and header replies) or a bare ``\r``
+        (answer data). Reads until a terminator is buffered, so a reply split
+        over several segments, or several replies in one segment, are handled
+        the same way. A ``\n`` left over from ``\r\n`` split across segments is
+        skipped at the start of the next line.
+        """
         if self.sock is None:
             raise RuntimeError("Socket not connected")
-        buf = ""
         while True:
+            self._rx = self._rx.lstrip(b"\n")
+            end = self._rx.find(b"\r")
+            if end >= 0:
+                line, self._rx = self._rx[:end], self._rx[end + 1:]
+                if self._rx.startswith(b"\n"):
+                    self._rx = self._rx[1:]
+                return line.decode("ascii")
             chunk = self.sock.recv(_RECV_SIZE)
             if not chunk:
-                break
-            buf += chunk.decode("ascii")
-            if "OK" in buf or "NG" in buf:
-                break
-        return buf
+                # Peer closed: hand out an unterminated rest once, then report the end.
+                line, self._rx = self._rx, b""
+                return line.decode("ascii") if line else None
+            self._rx += chunk
+
+    def _recv_until_ok(self) -> str:
+        """Receive lines until one starts with OK or NG and return it (with ``\r\n``);
+        "" if the peer closed first."""
+        while True:
+            line = self._recv_line()
+            if line is None:
+                return ""
+            if line.startswith(("OK", "NG")):
+                return line + "\r\n"
 
     def _recv_answer(self) -> str:
-        """Receive the answer data (ends with \\r or \\r\\n)."""
-        if self.sock is None:
-            raise RuntimeError("Socket not connected")
-        buf = ""
-        while True:
-            chunk = self.sock.recv(_RECV_SIZE)
-            if not chunk:
-                break
-            buf += chunk.decode("ascii")
-            if "\r\n" in buf or "\r" in buf:
-                break
-        return buf
+        """Receive one answer line (data ends with ``\r`` or ``\r\n``); "" if the peer closed."""
+        line = self._recv_line()
+        return "" if line is None else line + "\r"
 
     # ── Transaction patterns ──────────────────────────────────────────────────
 
